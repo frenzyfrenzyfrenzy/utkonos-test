@@ -1,5 +1,8 @@
 package com.svintsov.instrument.service;
 
+import com.svintsov.instrument.model.BlockData;
+
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -9,6 +12,6 @@ import java.io.IOException;
  */
 public interface FileAnalyzerService {
 
-    void performAnalysis(String fullFilePath, Integer blockSize) throws IOException;
+    BlockData performAnalysis(File file, Integer blockSize) throws IOException;
 
 }

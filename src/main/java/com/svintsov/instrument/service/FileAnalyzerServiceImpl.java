@@ -1,6 +1,7 @@
 package com.svintsov.instrument.service;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.io.FileUtils.lineIterator;
 
 import com.svintsov.instrument.model.BlockData;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -31,13 +33,8 @@ public class FileAnalyzerServiceImpl implements FileAnalyzerService {
     private final ParserService parserService;
 
     @Override
-    public void performAnalysis(String fullFilePath, Integer blockSize) throws IOException {
+    public BlockData performAnalysis(File file, Integer blockSize) throws IOException {
         log.info("Reading lines...");
-
-        File file = new File(fullFilePath);
-        if (!file.exists() || !file.isFile()) {
-            throw new IllegalArgumentException(String.format("%s is not a valid file", fullFilePath));
-        }
 
         try (LineIterator iterator = lineIterator(file, FILE_ENCODING)) {
             BlockData previousBlockData = null;
@@ -45,11 +42,12 @@ public class FileAnalyzerServiceImpl implements FileAnalyzerService {
             while (iterator.hasNext()) {
                 String line = iterator.nextLine();
                 currentBlock.add(line);
-                if (blockSize.equals(currentBlock.size())) {
+                if (blockSize.equals(currentBlock.size()) || !iterator.hasNext()) {
                     previousBlockData = analyzeBlock(currentBlock, previousBlockData);
                     currentBlock.clear();
                 }
             }
+            return previousBlockData;
         }
     }
 
@@ -63,15 +61,40 @@ public class FileAnalyzerServiceImpl implements FileAnalyzerService {
 
         log.info("Valid lines: {}", validLines);
 
-        Double instrumentOneAverage = validLines.stream()
+        Map<Integer, Long> thisInstrumentsCounters = validLines.stream()
+                .collect(Collectors.groupingBy(InstrumentLine::getInstrumentNumber, Collectors.counting()));
+
+        Long thisInstrumentOneCounter = thisInstrumentsCounters.getOrDefault(1, 0L);
+
+        Double thisInstrumentOneSum = validLines.stream()
                 .filter(instrumentLine -> instrumentLine.getInstrumentNumber().equals(1))
                 .map(InstrumentLine::getPrice)
-                .reduce(0.d, (average, current) -> (average + current) / 2);
+                .reduce(Double::sum)
+                .orElse(0.d);
 
-        log.info("Instrument one average: {}", instrumentOneAverage);
+        Double instrumentOneAverage;
+        if (nonNull(previousBlockData)) {
 
-        return new BlockData()
-                .setInstrumentOneAveragePrice(instrumentOneAverage);
+            Long previousInstrumentOneCounter = previousBlockData.getInstrumentCounters().getOrDefault(1, 0L);
+            Double previousInstrumentOneAverage = previousBlockData.getInstrumentOneAveragePrice();
+            Double previousInstrumentOneSum = previousInstrumentOneAverage * previousInstrumentOneCounter.doubleValue();
+
+            instrumentOneAverage = thisInstrumentOneCounter == 0 ? previousInstrumentOneAverage :
+                    (thisInstrumentOneSum + previousInstrumentOneSum) / (thisInstrumentOneCounter.doubleValue() + previousInstrumentOneCounter);
+
+            previousBlockData.getInstrumentCounters().put(1, thisInstrumentOneCounter + previousInstrumentOneCounter);
+            previousBlockData.setInstrumentOneAveragePrice(instrumentOneAverage);
+
+            return previousBlockData;
+        } else {
+            BlockData blockData = new BlockData();
+            blockData.getInstrumentCounters().put(1, thisInstrumentOneCounter);
+
+            instrumentOneAverage = thisInstrumentOneCounter == 0 ? 0 : thisInstrumentOneSum / thisInstrumentOneCounter.doubleValue();
+            blockData.setInstrumentOneAveragePrice(instrumentOneAverage);
+
+            return blockData;
+        }
     }
 
 }

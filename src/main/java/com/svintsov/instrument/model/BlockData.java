@@ -19,8 +19,10 @@ import java.util.Map;
 @Accessors(chain = true)
 public class BlockData {
 
-    private Double instrumentOneAveragePrice;
-    private Double instrumentTwoNovemberAveragePrice;
+    private Map<Integer, Long> instrumentCounters = new HashMap<>();
+
+    private Double instrumentOneAveragePrice = 0.d;
+    private Double instrumentTwoNovemberAveragePrice = 0.d;
     private Map<Integer, Double> lastTenPricesSumByInstrument = new HashMap<>();
 
 }
