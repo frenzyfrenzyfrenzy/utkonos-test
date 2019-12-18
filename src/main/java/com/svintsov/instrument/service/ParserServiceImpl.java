@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,7 +25,7 @@ public class ParserServiceImpl implements ParserService {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.US);
 
     @Override
-    public Optional<InstrumentLine> parseLine(String line) {
+    public Optional<InstrumentLine> parseLine(String line, Predicate<LocalDate> datePredicate) {
 
         Pattern pattern = Pattern.compile(INSTRUMENT_LINE_PATTERN);
         Matcher matcher = pattern.matcher(line);

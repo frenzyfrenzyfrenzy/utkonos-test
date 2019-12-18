@@ -27,12 +27,12 @@ public class FileAnalyzerServiceTest extends BaseIntegrationTest {
         File firstTestFile = getFileFromResources("first_test_file.txt");
         BlockData blockData = fileAnalyzerService.performAnalysis(firstTestFile, 10);
 
-        log.info("Counters: {}", blockData.getInstrumentCounters());
-        log.info("First average: {}", blockData.getInstrumentOneAveragePrice());
+        log.info("Counters: {}", blockData.getInstrumentAllTimeCounters());
+        log.info("Averages: {}", blockData.getInstrumentAllTimeAverages());
 
         SoftAssertions.assertSoftly(softAssertions -> {
-            softAssertions.assertThat(blockData.getInstrumentCounters().get(1)).isEqualTo(35);
-            softAssertions.assertThat(blockData.getInstrumentAverages().get(1)).isEqualTo(2.54382d, Offset.offset(.0001d));
+            softAssertions.assertThat(blockData.getInstrumentAllTimeCounters().get(1)).isEqualTo(35);
+            softAssertions.assertThat(blockData.getInstrumentAllTimeAverages().get(1)).isEqualTo(2.54382d, Offset.offset(.0001d));
         });
     }
 
@@ -41,12 +41,12 @@ public class FileAnalyzerServiceTest extends BaseIntegrationTest {
         File firstTestFile = getFileFromResources("second_test_file.txt");
         BlockData blockData = fileAnalyzerService.performAnalysis(firstTestFile, 10);
 
-        log.info("Counters: {}", blockData.getInstrumentCounters());
-        log.info("First average: {}", blockData.getInstrumentOneAveragePrice());
+        log.info("Counters: {}", blockData.getInstrumentAllTimeCounters());
+        log.info("Averages: {}", blockData.getInstrumentAllTimeAverages());
 
         SoftAssertions.assertSoftly(softAssertions -> {
-            softAssertions.assertThat(blockData.getInstrumentCounters().get(1)).isEqualTo(25);
-            softAssertions.assertThat(blockData.getInstrumentAverages().get(1)).isEqualTo(2.567116, Offset.offset(.0001d));
+            softAssertions.assertThat(blockData.getInstrumentAllTimeCounters().get(1)).isEqualTo(25);
+            softAssertions.assertThat(blockData.getInstrumentAllTimeAverages().get(1)).isEqualTo(2.567116, Offset.offset(.0001d));
         });
     }
 
@@ -55,12 +55,12 @@ public class FileAnalyzerServiceTest extends BaseIntegrationTest {
         File firstTestFile = getFileFromResources("third_test_file.txt");
         BlockData blockData = fileAnalyzerService.performAnalysis(firstTestFile, 10);
 
-        log.info("Counters: {}", blockData.getInstrumentCounters());
-        log.info("First average: {}", blockData.getInstrumentOneAveragePrice());
+        log.info("Counters: {}", blockData.getInstrumentAllTimeCounters());
+        log.info("Averages: {}", blockData.getInstrumentAllTimeAverages());
 
         SoftAssertions.assertSoftly(softAssertions -> {
-            softAssertions.assertThat(blockData.getInstrumentCounters().get(1)).isEqualTo(12);
-            softAssertions.assertThat(blockData.getInstrumentAverages().get(1)).isEqualTo(2.54247, Offset.offset(.0001d));
+            softAssertions.assertThat(blockData.getInstrumentAllTimeCounters().get(1)).isEqualTo(12);
+            softAssertions.assertThat(blockData.getInstrumentAllTimeAverages().get(1)).isEqualTo(2.54247, Offset.offset(.0001d));
         });
     }
 }

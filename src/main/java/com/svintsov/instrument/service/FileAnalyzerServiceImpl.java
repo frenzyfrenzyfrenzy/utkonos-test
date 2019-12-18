@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -55,7 +54,7 @@ public class FileAnalyzerServiceImpl implements FileAnalyzerService {
     private BlockData analyzeBlock(List<String> currentBlock, BlockData previousBlockData) {
 
         List<InstrumentLine> validLines = currentBlock.stream()
-                .map(parserService::parseLine)
+                .map(line -> parserService.parseLine(line, localDate -> true))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .collect(Collectors.toList());
@@ -80,15 +79,15 @@ public class FileAnalyzerServiceImpl implements FileAnalyzerService {
                                       Map<Integer, Double> thisInstrumentsSums) {
 
         thisInstrumentsCounters.forEach((instrument, counter) -> {
-            Double previousInstrumentAverage = previousBlockData.getInstrumentAverages().getOrDefault(instrument, 0.d);
-            Long previousInstrumentCounter = previousBlockData.getInstrumentCounters().getOrDefault(instrument, 0L);
+            Double previousInstrumentAverage = previousBlockData.getInstrumentAllTimeAverages().getOrDefault(instrument, 0.d);
+            Long previousInstrumentCounter = previousBlockData.getInstrumentAllTimeCounters().getOrDefault(instrument, 0L);
             Double thisInstrumentSum = thisInstrumentsSums.getOrDefault(instrument, 0.d);
 
             Double newInstrumentAverage =
                     (thisInstrumentSum + (previousInstrumentAverage * previousInstrumentCounter)) / (counter.doubleValue() + previousInstrumentCounter);
 
-            previousBlockData.getInstrumentAverages().put(instrument, newInstrumentAverage);
-            previousBlockData.getInstrumentCounters().merge(instrument, counter, Long::sum);
+            previousBlockData.getInstrumentAllTimeAverages().put(instrument, newInstrumentAverage);
+            previousBlockData.getInstrumentAllTimeCounters().merge(instrument, counter, Long::sum);
         });
 
         return previousBlockData;
@@ -101,10 +100,10 @@ public class FileAnalyzerServiceImpl implements FileAnalyzerService {
         thisInstrumentsCounters.forEach((instrument, counter) -> {
             Double thisInstrumentSum = thisInstrumentsSums.getOrDefault(instrument, 0.d);
             Double newInstrumentAverage = (thisInstrumentSum) / (counter.doubleValue());
-            blockData.getInstrumentAverages().put(instrument, newInstrumentAverage);
+            blockData.getInstrumentAllTimeAverages().put(instrument, newInstrumentAverage);
         });
 
-        blockData.setInstrumentCounters(thisInstrumentsCounters);
+        blockData.setInstrumentAllTimeCounters(thisInstrumentsCounters);
         return blockData;
     }
 

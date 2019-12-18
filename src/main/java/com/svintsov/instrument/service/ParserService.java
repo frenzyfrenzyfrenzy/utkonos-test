@@ -2,7 +2,9 @@ package com.svintsov.instrument.service;
 
 import com.svintsov.instrument.model.InstrumentLine;
 
+import java.time.LocalDate;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 /**
  * ValidatorService.
@@ -11,6 +13,6 @@ import java.util.Optional;
  */
 public interface ParserService {
 
-    Optional<InstrumentLine> parseLine(String line);
+    Optional<InstrumentLine> parseLine(String line, Predicate<LocalDate> datePredicate);
 
 }
