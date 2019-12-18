@@ -1,12 +1,14 @@
 package com.svintsov.instrument;
 
+import static com.google.common.collect.Lists.newArrayList;
+
+import com.svintsov.instrument.cmd.CommandLineUtils;
+import com.svintsov.instrument.config.SpringApplication;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+import java.util.Map;
 
 /**
  * Application.
@@ -14,35 +16,26 @@ import org.apache.commons.cli.ParseException;
  * @author Ilya_Svintsov
  */
 @Slf4j
-@SuppressWarnings("ALL")
 public class Application {
 
+    public static final String APPLICATION_NAME = "Financial instruments analyzer";
+
+    private static final String CONFIG_BASE_PACKAGE = "com.svintsov.instrument";
+
     public static void main(String[] args) {
-        log.info("Starting... Arguments are: {}", args);
+        log.info("Starting... Arguments are: {}", newArrayList(args));
 
-        Options options = new Options();
-        options.addOption("f", "file", true, "Input file full path")
-                .addOption("b", "block", true, "Block size for read");
+        CommandLineUtils.parseCommandLine(args)
+                .ifPresent(commandLineOptions -> performAnalysis(commandLineOptions.getFileFullPath(), commandLineOptions.getBlockSize()));
+    }
 
-        String fileFullPath;
-        Long blockSize;
-        try {
-            CommandLineParser parser = new DefaultParser();
-            CommandLine cmd = parser.parse(options, args);
-            if (!cmd.hasOption("file")) {
-                throw new ParseException("File must be specified");
-            } else {
-                fileFullPath = cmd.getOptionValue("file");
-                blockSize = Long.valueOf(cmd.getOptionValue("block", "1000"));
-            }
-        } catch (ParseException| NumberFormatException e) {
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Financial instruments parser", options);
-            return;
-        }
+    private static void performAnalysis(@NotNull String fileFullPath, @NotNull Integer blockSize) {
 
-        FileReader fileReader = new FileReader();
-        fileReader.readFile(fileFullPath, blockSize);
+        log.info("Performing analysis... File name = {}, block size = {}", fileFullPath, blockSize);
+
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(CONFIG_BASE_PACKAGE);
+        SpringApplication application = context.getBean(SpringApplication.class);
+        application.performAnalysis(fileFullPath, blockSize);
     }
 
 }
