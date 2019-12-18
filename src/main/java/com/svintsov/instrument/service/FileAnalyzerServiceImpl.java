@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -64,37 +65,47 @@ public class FileAnalyzerServiceImpl implements FileAnalyzerService {
         Map<Integer, Long> thisInstrumentsCounters = validLines.stream()
                 .collect(Collectors.groupingBy(InstrumentLine::getInstrumentNumber, Collectors.counting()));
 
-        Long thisInstrumentOneCounter = thisInstrumentsCounters.getOrDefault(1, 0L);
+        Map<Integer, Double> thisInstrumentsSums = validLines.stream()
+                .collect(Collectors.groupingBy(InstrumentLine::getInstrumentNumber, Collectors.mapping(InstrumentLine::getPrice, Collectors.summingDouble(Double::doubleValue))));
 
-        Double thisInstrumentOneSum = validLines.stream()
-                .filter(instrumentLine -> instrumentLine.getInstrumentNumber().equals(1))
-                .map(InstrumentLine::getPrice)
-                .reduce(Double::sum)
-                .orElse(0.d);
-
-        Double instrumentOneAverage;
         if (nonNull(previousBlockData)) {
-
-            Long previousInstrumentOneCounter = previousBlockData.getInstrumentCounters().getOrDefault(1, 0L);
-            Double previousInstrumentOneAverage = previousBlockData.getInstrumentOneAveragePrice();
-            Double previousInstrumentOneSum = previousInstrumentOneAverage * previousInstrumentOneCounter.doubleValue();
-
-            instrumentOneAverage = thisInstrumentOneCounter == 0 ? previousInstrumentOneAverage :
-                    (thisInstrumentOneSum + previousInstrumentOneSum) / (thisInstrumentOneCounter.doubleValue() + previousInstrumentOneCounter);
-
-            previousBlockData.getInstrumentCounters().put(1, thisInstrumentOneCounter + previousInstrumentOneCounter);
-            previousBlockData.setInstrumentOneAveragePrice(instrumentOneAverage);
-
-            return previousBlockData;
+            return updateBlockData(previousBlockData, thisInstrumentsCounters, thisInstrumentsSums);
         } else {
-            BlockData blockData = new BlockData();
-            blockData.getInstrumentCounters().put(1, thisInstrumentOneCounter);
-
-            instrumentOneAverage = thisInstrumentOneCounter == 0 ? 0 : thisInstrumentOneSum / thisInstrumentOneCounter.doubleValue();
-            blockData.setInstrumentOneAveragePrice(instrumentOneAverage);
-
-            return blockData;
+            return initializeBlockData(thisInstrumentsCounters, thisInstrumentsSums);
         }
+    }
+
+    private BlockData updateBlockData(BlockData previousBlockData,
+                                      Map<Integer, Long> thisInstrumentsCounters,
+                                      Map<Integer, Double> thisInstrumentsSums) {
+
+        thisInstrumentsCounters.forEach((instrument, counter) -> {
+            Double previousInstrumentAverage = previousBlockData.getInstrumentAverages().getOrDefault(instrument, 0.d);
+            Long previousInstrumentCounter = previousBlockData.getInstrumentCounters().getOrDefault(instrument, 0L);
+            Double thisInstrumentSum = thisInstrumentsSums.getOrDefault(instrument, 0.d);
+
+            Double newInstrumentAverage =
+                    (thisInstrumentSum + (previousInstrumentAverage * previousInstrumentCounter)) / (counter.doubleValue() + previousInstrumentCounter);
+
+            previousBlockData.getInstrumentAverages().put(instrument, newInstrumentAverage);
+            previousBlockData.getInstrumentCounters().merge(instrument, counter, Long::sum);
+        });
+
+        return previousBlockData;
+    }
+
+    private BlockData initializeBlockData(Map<Integer, Long> thisInstrumentsCounters, Map<Integer, Double> thisInstrumentsSums) {
+
+        BlockData blockData = new BlockData();
+
+        thisInstrumentsCounters.forEach((instrument, counter) -> {
+            Double thisInstrumentSum = thisInstrumentsSums.getOrDefault(instrument, 0.d);
+            Double newInstrumentAverage = (thisInstrumentSum) / (counter.doubleValue());
+            blockData.getInstrumentAverages().put(instrument, newInstrumentAverage);
+        });
+
+        blockData.setInstrumentCounters(thisInstrumentsCounters);
+        return blockData;
     }
 
 }

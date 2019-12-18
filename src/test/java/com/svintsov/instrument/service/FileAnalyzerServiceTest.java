@@ -32,7 +32,7 @@ public class FileAnalyzerServiceTest extends BaseIntegrationTest {
 
         SoftAssertions.assertSoftly(softAssertions -> {
             softAssertions.assertThat(blockData.getInstrumentCounters().get(1)).isEqualTo(35);
-            softAssertions.assertThat(blockData.getInstrumentOneAveragePrice()).isEqualTo(2.54382d, Offset.offset(.0001d));
+            softAssertions.assertThat(blockData.getInstrumentAverages().get(1)).isEqualTo(2.54382d, Offset.offset(.0001d));
         });
     }
 
@@ -46,7 +46,7 @@ public class FileAnalyzerServiceTest extends BaseIntegrationTest {
 
         SoftAssertions.assertSoftly(softAssertions -> {
             softAssertions.assertThat(blockData.getInstrumentCounters().get(1)).isEqualTo(25);
-            softAssertions.assertThat(blockData.getInstrumentOneAveragePrice()).isEqualTo(2.567116, Offset.offset(.0001d));
+            softAssertions.assertThat(blockData.getInstrumentAverages().get(1)).isEqualTo(2.567116, Offset.offset(.0001d));
         });
     }
 
@@ -60,7 +60,7 @@ public class FileAnalyzerServiceTest extends BaseIntegrationTest {
 
         SoftAssertions.assertSoftly(softAssertions -> {
             softAssertions.assertThat(blockData.getInstrumentCounters().get(1)).isEqualTo(12);
-            softAssertions.assertThat(blockData.getInstrumentOneAveragePrice()).isEqualTo(2.54247, Offset.offset(.0001d));
+            softAssertions.assertThat(blockData.getInstrumentAverages().get(1)).isEqualTo(2.54247, Offset.offset(.0001d));
         });
     }
 }

@@ -20,6 +20,7 @@ import java.util.Map;
 public class BlockData {
 
     private Map<Integer, Long> instrumentCounters = new HashMap<>();
+    private Map<Integer, Double> instrumentAverages = new HashMap<>();
 
     private Double instrumentOneAveragePrice = 0.d;
     private Double instrumentTwoNovemberAveragePrice = 0.d;
